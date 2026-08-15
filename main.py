@@ -12,7 +12,7 @@ dt = clock.tick(25) / 1000
 
 class Ball:
 
-    density = 1
+    density = 5
 
     def __init__(self, x, y, x_v, y_v, colour, size):
 
@@ -41,14 +41,21 @@ class Ball:
                 # if distance is less than size of target obj
                 #   mass = ((actual distance / size) ** (1/2)) * mass
 
-                if distance < obj.size:
-                    effective_mass = ((distance / obj.size) ** (1/2)) * obj.mass
-                else:
+                if distance == 0:
+                    acc_vector = pg.Vector2(0,0)
+                    
+                elif distance > obj.size:
                     effective_mass = obj.mass
+                    acc_vector = acc_unit_vector * (effective_mass / distance**2)
 
-                acc_vector = (effective_mass * acc_unit_vector) / (distance**2)
+                elif distance < obj.size:
+                    effective_mass = obj.mass
+                    acc_vector = acc_unit_vector * (effective_mass / obj.size**3) * distance
+
+                    
+
+                # acc_vector = (effective_mass * acc_unit_vector) / (distance**2)
                 self.acc = acc_vector
-                print(self.acc)
 
         print(acc_unit_vector)
 
@@ -59,10 +66,10 @@ pg.draw.circle(screen, (255,0,0), (640,360), 5)
 
 running = True
 
-ball1 = Ball(720, 360, 5, 0, (255,0,0), 5)
-ball2 = Ball(720, 180, 5, 0, (0,255,0), 100)
+ball1 = Ball(720, 180, 20, 0, (255,0,0), 5)
+ball2 = Ball(720, 360, 0, 0, (0,255,0), 100)
 
-objects = [ball1, ball2]
+objects = [ball1, ball2][::-1]
 
 while running:
     for event in pg.event.get():
