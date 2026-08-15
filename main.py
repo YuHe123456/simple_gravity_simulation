@@ -5,7 +5,6 @@ pg.init()
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 
-
 clock = pg.time.Clock()
 
 clock.tick(60)
@@ -23,7 +22,8 @@ class Ball:
 
         self.colour = colour
         self.size = size
-        self.mass = math.pi * (size^2) * self.density
+
+        self.mass = math.pi * size**2 * self.density
 
     def tick(self):
         self.pos = self.pos + (self.vel * dt)
@@ -35,9 +35,18 @@ class Ball:
     def find_acc(self, obj_list):
         for obj in obj_list:
             if obj is not self:
-                distance_squared = self.pos.distance_squared_to(obj.pos) / 100
+                distance = self.pos.distance_to(obj.pos)
                 acc_unit_vector = (obj.pos - self.pos).normalize()
-                acc_vector = (obj.mass * acc_unit_vector) / distance_squared
+
+                # if distance is less than size of target obj
+                #   mass = ((actual distance / size) ** (1/2)) * mass
+
+                if distance < obj.size:
+                    effective_mass = ((distance / obj.size) ** (1/2)) * obj.mass
+                else:
+                    effective_mass = obj.mass
+
+                acc_vector = (effective_mass * acc_unit_vector) / (distance**2)
                 self.acc = acc_vector
                 print(self.acc)
 
@@ -65,11 +74,10 @@ while running:
     screen.fill((255,255,255))
 
     for obj in objects:
-        obj.tick()
-        obj.draw_ball(screen)
         obj.find_acc(objects)
-    
-
-    
+        obj.tick()
+    for obj in objects:
+        obj.draw_ball(screen)
+        
     
     pg.display.flip()
