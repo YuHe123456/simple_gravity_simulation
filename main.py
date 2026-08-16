@@ -7,12 +7,11 @@ SCREEN_HEIGHT = 720
 
 clock = pg.time.Clock()
 
-clock.tick(60)
-dt = clock.tick(25) / 1000
+
 
 class Ball:
 
-    density = 30
+    density = 50
 
     def __init__(self, x, y, x_v, y_v, colour, size, trail=False):
 
@@ -26,54 +25,59 @@ class Ball:
         self.mass = math.pi * size**2 * self.density
 
         self.trail = trail
+        self.trail_list = []
 
-    def tick(self, obj_list, trail_list):
+    def tick(self, obj_list, screen):
 
         self.find_acc(obj_list)
         self.vel = self.vel + (self.acc * dt)
         self.pos = self.pos + (self.vel * dt)
 
-        self.create_trail_ball(trail_list)
+        self.create_trail_ball()
+
+        for trail_ball in self.trail_list:
+            if trail_ball.draw_trail_ball(screen) is False:
+                self.trail_list.remove(trail_ball)
 
     def draw_ball(self, screen):
         pg.draw.circle(screen, self.colour, self.pos, self.size)
 
-    def create_trail_ball(self, trail_list):
+    def create_trail_ball(self):
 
         if self.trail is True:
             trail_ball = TrailBall(self.pos, self.size)
-            trail_list.append(trail_ball)
+            self.trail_list.append(trail_ball)
 
     def find_acc(self, obj_list):
         for obj in obj_list:
             if obj is not self:
+
+                self.acc = pg.Vector2(0,0)
+
                 distance = self.pos.distance_to(obj.pos)
-                acc_unit_vector = (obj.pos - self.pos).normalize()
+                
 
                 # if distance is less than size of target obj
                 #   mass = ((actual distance / size) ** (1/2)) * mass
 
                 if distance == 0:
-                    acc_vector = pg.Vector2(0,0)
-                    
-                elif distance > obj.size:
+                    continue
+
+                acc_unit_vector = (obj.pos - self.pos).normalize()
+                
+                if distance >= obj.size:
                     effective_mass = obj.mass
-                    acc_vector = acc_unit_vector * (effective_mass / distance**2)
+                    self.acc += acc_unit_vector * (effective_mass / distance**2)
 
                 elif distance < obj.size:
                     effective_mass = obj.mass
-                    acc_vector = acc_unit_vector * (effective_mass / obj.size**3) * distance
-
-                    
+                    self.acc += acc_unit_vector * (effective_mass / obj.size**3) * distance
 
                 # acc_vector = (effective_mass * acc_unit_vector) / (distance**2)
-                self.acc = acc_vector
-
-        print(acc_unit_vector)
 
 class TrailBall:
 
-    countdown = 10  # Number of frames where ball is visible
+    countdown = 20  # Number of frames where ball is visible
     trail_colour = (0,255,255)
 
     def __init__(self, pos, size):
@@ -97,11 +101,11 @@ pg.draw.circle(screen, (255,0,0), (640,360), 5)
 
 running = True
 
-ball1 = Ball(720, 180, 0, 0, (255,0,0), 5, trail=True)
-ball2 = Ball(720, 360, 0, 0, (0,255,0), 100)
+ball1 = Ball(640, 180, -100, 0, (255,0,0), 5, trail=True)
+ball2 = Ball(640, 360, 0, 0, (0,255,0), 100)
+ball3 = Ball(320, 360, 0, 0, (255,255,0), 100)
 
-objects = [ball1, ball2][::-1]
-trails = []
+objects = [ball1, ball2, ball3][::-1]
 
 while running:
     for event in pg.event.get():
@@ -110,21 +114,15 @@ while running:
 
     # update code
 
+    dt = clock.tick(60) / 1000
+
     screen.fill((255,255,255))
 
     for obj in objects:
-        obj.tick(objects, trails)
-
-    for trail_ball in trails:
-
-        if trail_ball.draw_trail_ball(screen) is False:
-            trails.remove(trail_ball)
+        obj.tick(objects, screen)
 
     for obj in objects:
         obj.draw_ball(screen)
-
-
-
         
     
     pg.display.flip()
