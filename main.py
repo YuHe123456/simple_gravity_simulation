@@ -29,7 +29,7 @@ class Ball:
 
     def tick(self, obj_list, screen):
 
-        self.find_acc(obj_list)
+        
         self.vel = self.vel + (self.acc * dt)
         self.pos = self.pos + (self.vel * dt)
 
@@ -119,10 +119,13 @@ while running:
     screen.fill((255,255,255))
 
     for obj in objects:
+        obj.find_acc(objects)
+
+    for obj in objects:
         obj.tick(objects, screen)
 
     for obj in objects:
         obj.draw_ball(screen)
-        
+
     
     pg.display.flip()
