@@ -12,7 +12,8 @@ clock = pg.time.Clock()
 class Ball:
 
     density = 50
-
+    LINE_COLOUR = (0,0,0)
+    LINE_SCALAR = 10
     def __init__(self, x, y, x_v, y_v, colour, size, trail=False):
 
         self.pos = pg.math.Vector2(x,y)
@@ -26,6 +27,7 @@ class Ball:
 
         self.trail = trail
         self.trail_list = []
+        
 
     def tick(self, obj_list, screen):
 
@@ -41,6 +43,10 @@ class Ball:
 
     def draw_ball(self, screen):
         pg.draw.circle(screen, self.colour, self.pos, self.size)
+
+    def draw_line(self,screen):
+        pg.draw.line(screen, self.LINE_COLOUR, self.pos, self.pos + (self.LINE_SCALAR * self.acc), width=4)
+    
 
     def create_trail_ball(self):
 
@@ -72,7 +78,9 @@ class Ball:
                 elif distance < obj.size:
                     self.acc += acc_unit_vector * (obj.mass / obj.size**3) * distance
 
-                # acc_vector = (effective_mass * acc_unit_vector) / (distance**2)
+    def calculate_kinetic_energy(self):
+        k_e = 0.5 * self.mass * self.vel.magnitude_squared()
+        return k_e
 
 class TrailBall:
 
@@ -98,9 +106,9 @@ pg.display.set_caption("Simulation")
 
 running = True
 
-ball1 = Ball(480, 480, 5, 0, (255,0,0), 20, trail=True)
-ball2 = Ball(640, 360, 0, -10, (0,255,0), 20, trail=True)
-ball3 = Ball(320, 360, 10, 0, (255,255,0), 20, trail=True)
+ball1 = Ball(480, 480, 0, 0, (255,0,0), 20, trail=True)
+ball2 = Ball(640, 360, 0, 0, (0,255,0), 20, trail=True)
+ball3 = Ball(320, 360, 0, 0, (255,255,0), 20, trail=True)
 
 objects = [ball1, ball2, ball3][::-1]
 
@@ -113,7 +121,14 @@ while running:
 
     # update code
 
-    dt = clock.tick(60) / 1000
+    dt = clock.tick(120) / 1000
+
+    total_k_e = 0
+    
+    for obj in objects:
+        total_k_e += obj.calculate_kinetic_energy()
+    
+    print(total_k_e)
 
     screen.fill((255,255,255))
 
@@ -125,6 +140,8 @@ while running:
 
     for obj in objects:
         obj.draw_ball(screen)
+        obj.draw_line(screen)
 
+ 
     
     pg.display.flip()
